@@ -20,7 +20,7 @@
     <details class="howto-section" open>
       <summary class="section-title howto-summary">使い方</summary>
 
-      <!-- ▼▼ ここから：3ステップ切替（カルーセル風） ▼▼ -->
+      <!-- ▼▼ 3ステップ切替 ▼▼ -->
       <div class="howto-carousel" data-howto-carousel>
         <!-- 表示エリア -->
         <div class="howto-viewport" aria-live="polite">
@@ -109,7 +109,6 @@
           <button type="button" class="howto-nav howto-next" data-next aria-label="次へ">＞</button>
         </div>
       </div>
-      <!-- ▲▲ ここまで：3ステップ切替（カルーセル風） ▲▲ -->
 
     </details>
 
@@ -160,7 +159,7 @@
       {% endif %}
     </div>
 
-    <!-- このアプリについて（結果の直下） -->
+    <!-- このアプリについて -->
     <details class="about-app">
       <summary class="about-app__summary">このアプリについて</summary>
       <div class="about-app__body">
@@ -206,8 +205,6 @@
 
   <!-- =========================
        Howto carousel JS (inline)
-       - 外部ライブラリなし
-       - フェード（最小アニメーション）
   ========================== -->
   <script>
   (() => {
@@ -249,7 +246,6 @@
       d.addEventListener('click', () => { index = i; update(); });
     });
 
-    // キーボード操作（左右キー）
     root.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowLeft' && index > 0) { index -= 1; update(); }
       if (e.key === 'ArrowRight' && index < last) { index += 1; update(); }
