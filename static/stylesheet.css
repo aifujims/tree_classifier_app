@@ -1,0 +1,407 @@
+/* =========================
+   Base
+========================= */
+:root {
+  --text: #444444;
+  --header: #69BCD0;
+  --footer: #F7F7F7;
+  --container: 900px;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+}
+
+/* =========================
+   Header
+========================= */
+header {
+  background-color: var(--header);
+  height: 60px;
+  display: flex;
+  align-items: center;
+  padding: 0 25px;
+}
+
+.header-title {
+  margin: 0;
+  color: #ffffff;
+  font-size: 25px;
+}
+
+/* =========================
+   Main layout
+========================= */
+.main {
+  max-width: var(--container);
+  margin: 24px auto 40px;
+  padding: 0 16px 24px;
+}
+
+/* 全体デフォルト（控えめ） */
+h2, p {
+  color: var(--text);
+}
+
+/* =========================
+   Howto Section (details/summary)
+========================= */
+.howto-section {
+  margin-top: 12px;
+  margin-bottom: 28px;
+}
+
+.howto-section .section-title {
+  margin: 0 0 10px 0;
+  text-align: left;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* 旧：テキスト版 howto（残してOK） */
+.howto-section .howto-text {
+  margin: 0 0 10px 0;
+  text-align: left;
+  line-height: 1.8;
+  padding-left: 1em;
+}
+
+/* howto画像（旧howto.png等にも効く） */
+.howto-section .howto-image {
+  display: block;
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  margin: 0 auto;
+}
+
+/* details/summary 折りたたみ */
+.howto-section > summary {
+  list-style: none;
+}
+
+.howto-section > summary::-webkit-details-marker {
+  display: none;
+}
+
+.howto-summary {
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ▶/▼ を自前で表示 */
+.howto-summary::before {
+  content: "▶ ";
+  display: inline-block;
+}
+
+.howto-section[open] > .howto-summary::before {
+  content: "▼ ";
+}
+
+/* =========================
+   Upload section / Form
+========================= */
+.upload-section {
+  margin-top: 10px;
+}
+
+.upload-text {
+  margin: 0 0 12px 0;
+  text-align: center;
+}
+
+form {
+  text-align: center;
+}
+
+.file_choose {
+  margin-right: 10px;
+}
+
+.disclaimer-text {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 8px;
+  text-align: center;
+}
+
+/* =========================
+   Result
+========================= */
+.result-section {
+  width: min(760px, 92%);
+  margin: 24px auto 0;
+  text-align: center;
+}
+
+.answer,
+.result-text {
+  margin: 16px 0 0 0;
+  text-align: center;
+}
+
+/* 判定結果：サムネ＋テキスト横並び */
+.result-layout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.result-thumb {
+  width: 140px;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.12);
+}
+
+.result-textbox .result-line {
+  margin: 0 0 8px 0;
+}
+
+/* =========================
+   About app (details/summary)
+   - 背景グレー + 枠線あり（現状維持）
+========================= */
+.about-app {
+  width: 100%;
+  margin: 12px auto 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 10px;
+  background: rgba(0,0,0,0.02);
+  text-align: left;
+}
+
+.about-app > summary {
+  list-style: none;
+}
+
+.about-app > summary::-webkit-details-marker {
+  display: none;
+}
+
+.about-app__summary {
+  cursor: pointer;
+  user-select: none;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* ▶/▼ を自前で表示 */
+.about-app__summary::before {
+  content: "▶ ";
+  display: inline-block;
+}
+
+.about-app[open] > .about-app__summary::before {
+  content: "▼ ";
+}
+
+.about-app__body {
+  margin-top: 10px;
+  padding: 0 6px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.about-app__body p {
+  margin: 0 0 8px 0;
+}
+
+.about-app__note {
+  margin-top: 16px;
+  font-size: 0.85rem;
+  color: #777;
+  text-align: left;
+}
+
+/* 箇条書き（解釈リスト） */
+.interpretation-list {
+  margin: 14px 0 8px;
+  padding-left: 2.0em;
+}
+
+.interpretation-list li {
+  margin-bottom: 10px;
+  line-height: 1.7;
+}
+
+.interpretation-list .term {
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+/* =========================
+   Footer
+========================= */
+footer {
+  background-color: var(--footer);
+  height: 110px;
+  position: relative;
+}
+
+.footer_img {
+  height: 25px;
+  margin: 15px 25px;
+}
+
+small {
+  margin: 15px 25px;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+}
+
+/* =========================
+   Howto carousel (final)
+   - 使い方だけ：外枠なし + 背景白
+   - 余白はタイトに
+========================= */
+.howto-carousel {
+  margin-top: 4px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 10px; /* 角丸不要なら 0 に */
+  background: #ffffff;
+}
+
+/* スライド表示領域 */
+.howto-viewport {
+  position: relative;
+  min-height: 0; /* 固定高さで間延びしないように */
+}
+
+/* スライドを重ねて切替（フェード） */
+.howto-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.28s ease;
+}
+
+.howto-slide.is-active {
+  position: relative;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* 中身（縦積み） */
+.howto-slide-inner.vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px; /* タイトめ */
+}
+
+/* 画像枠（ここが画像サイズの“本体”） */
+.howto-carousel .howto-figure {
+  margin: 0;
+  width: 320px;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 画像（枠にフィット、切らずに収める） */
+.howto-carousel img.howto-icon {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  object-fit: contain;
+  margin: 0 !important;
+}
+
+/* STEP + タイトル行 */
+.howto-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
+.howto-step {
+  display: inline-block;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.06);
+  white-space: nowrap;
+}
+
+.howto-title {
+  margin: 0;
+  font-size: 15px;
+}
+
+.howto-desc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  padding-left: 0;
+}
+
+/* 操作エリア：＜  ●●●  ＞（中央寄せ） */
+.howto-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.howto-nav {
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: #fff;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.howto-nav:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.howto-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* ページ数（1/3）は非表示 */
+.howto-count {
+  display: none;
+}
+
+/* ドット */
+.howto-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.howto-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.25);
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.howto-dot.is-active {
+  background: rgba(0,0,0,0.55);
+}

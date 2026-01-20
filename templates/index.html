@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Tree Classifier</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
+</head>
+
+<body>
+  <!-- ヘッダー -->
+  <header>
+    <h1 class="header-title">TreeClassifier</h1>
+  </header>
+
+  <div class="main">
+
+    <!-- 使い方セクション -->
+    <details class="howto-section" open>
+      <summary class="section-title howto-summary">使い方</summary>
+
+      <!-- ▼▼ ここから：3ステップ切替（カルーセル風） ▼▼ -->
+      <div class="howto-carousel" data-howto-carousel>
+        <!-- 表示エリア -->
+        <div class="howto-viewport" aria-live="polite">
+
+          <!-- STEP 1 -->
+          <section class="howto-slide is-active" data-slide aria-label="使い方 1/3">
+            <div class="howto-slide-inner vertical">
+              <figure class="howto-figure">
+                <img
+                  class="howto-image howto-icon"
+                  src="{{ url_for('static', filename='img/howto_1.png') }}"
+                  alt="STEP1：木の絵を描く"
+                  loading="lazy">
+              </figure>
+
+              <div class="howto-textbox center">
+                <div class="howto-heading">
+                  <span class="howto-step">STEP 1</span>
+                  <h3 class="howto-title">木の絵を描く</h3>
+                </div>
+                <p class="howto-desc">自由に木の絵を描いてください。</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- STEP 2 -->
+          <section class="howto-slide" data-slide aria-label="使い方 2/3">
+            <div class="howto-slide-inner vertical">
+              <figure class="howto-figure">
+                <img
+                  class="howto-image howto-icon"
+                  src="{{ url_for('static', filename='img/howto_2.png') }}"
+                  alt="STEP2：ファイルをアップロード"
+                  loading="lazy">
+              </figure>
+
+              <div class="howto-textbox center">
+                <div class="howto-heading">
+                  <span class="howto-step">STEP 2</span>
+                  <h3 class="howto-title">ファイルをアップロード</h3>
+                </div>
+                <p class="howto-desc">完成した木の絵をアップロードしてください。写真撮影したものでもOKです。</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- STEP 3 -->
+          <section class="howto-slide" data-slide aria-label="使い方 3/3">
+            <div class="howto-slide-inner vertical">
+              <figure class="howto-figure">
+                <img
+                  class="howto-image howto-icon"
+                  src="{{ url_for('static', filename='img/howto_3.png') }}"
+                  alt="STEP3：判定結果を見る"
+                  loading="lazy">
+              </figure>
+
+              <div class="howto-textbox center">
+                <div class="howto-heading">
+                  <span class="howto-step">STEP 3</span>
+                  <h3 class="howto-title">判定結果を見る</h3>
+                </div>
+                <p class="howto-desc">AIが木の特徴を判定します。結果を確認してください。</p>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- 操作エリア -->
+        <div class="howto-controls">
+          <button type="button" class="howto-nav howto-prev" data-prev aria-label="前へ">＜</button>
+
+          <div class="howto-indicator" aria-label="現在のステップ">
+            <span class="howto-count">
+              <span data-current>1</span>/<span data-total>3</span>
+            </span>
+
+            <div class="howto-dots" data-dots>
+              <button type="button" class="howto-dot is-active" data-dot aria-label="1ページ目へ"></button>
+              <button type="button" class="howto-dot" data-dot aria-label="2ページ目へ"></button>
+              <button type="button" class="howto-dot" data-dot aria-label="3ページ目へ"></button>
+            </div>
+          </div>
+
+          <button type="button" class="howto-nav howto-next" data-next aria-label="次へ">＞</button>
+        </div>
+      </div>
+      <!-- ▲▲ ここまで：3ステップ切替（カルーセル風） ▲▲ -->
+
+    </details>
+
+    <!-- アップロード & 判定 -->
+    <div class="upload-section">
+      <p class="upload-text">画像をアップロードしてください</p>
+
+      <form method="POST" enctype="multipart/form-data">
+        <input class="file_choose" type="file" name="file">
+        <input class="btn" value="判定する" type="submit">
+      </form>
+    </div>
+
+    <!-- 判定結果 -->
+    {% if result %}
+    <div class="result-section">
+      <p class="result-label">あなたの描いた木の特徴は…</p>
+
+      {% if result.error %}
+        <p class="result-text">{{ result.error }}</p>
+      {% else %}
+        <div class="result-layout">
+
+          {% if result.uploaded_url %}
+            <img class="result-thumb"
+                 src="{{ result.uploaded_url }}"
+                 alt="アップロード画像">
+          {% endif %}
+
+          <div class="result-textbox">
+            {% if result.is_stump %}
+              <p class="result-line"><strong>{{ result.stump_label }}</strong>です</p>
+
+            {% elif result.is_xmas %}
+              <p class="result-line"><strong>{{ result.xmas_label }}</strong>です</p>
+
+            {% else %}
+              <p class="result-line">根：<strong>{{ result.root_label }}</strong></p>
+              <p class="result-line">幹：<strong>{{ result.trunk_label }}</strong></p>
+              <p class="result-line">葉：<strong>{{ result.leaves_label }}</strong></p>
+            {% endif %}
+          </div>
+        </div>
+
+        <p class="disclaimer-text">
+          ※ AIの判定結果は、必ずしも正確とは限りません。
+        </p>
+      {% endif %}
+    </div>
+
+    <!-- このアプリについて（結果の直下） -->
+    <details class="about-app">
+      <summary class="about-app__summary">このアプリについて</summary>
+      <div class="about-app__body">
+
+        <p>
+          本アプリは、描かれた木の特徴から心理状態や性格特性を読み解く手法として知られる「バウムテスト」という心理検査の考え方に着想を得て製作しました。
+          アップロードされた木の画像について、AIがその特徴を機械的に判定する試みです。
+        </p>
+
+        <p>
+          以下は、バウムテストにおける解釈例の一部です。
+        </p>
+
+        <ul class="interpretation-list">
+          <li><span class="term">根が描かれている … </span><span class="desc">気分が安定している</span></li>
+          <li><span class="term">根が描かれていない … </span><span class="desc">不安や揺らぎを表す</span></li>
+          <li><span class="term">幹が太い … </span><span class="desc">自信がある、エネルギーが強い、生命力がある</span></li>
+          <li><span class="term">幹が細い … </span><span class="desc">無力感、元気のなさを表す</span></li>
+          <li><span class="term">樹冠が大きく描かれている … </span><span class="desc">自信や大望を持っている</span></li>
+          <li><span class="term">葉が描かれていない（枯れ木） … </span><span class="desc">抑うつ気分を表す</span></li>
+          <li><span class="term">切り株 … </span><span class="desc">心理的な負荷を経験している</span></li>
+          <li><span class="term">クリスマスツリー … </span><span class="desc">楽しさや、他者と過ごす時間を大切にしたい思いの表れ</span></li>
+        </ul>
+
+        <p>
+          実際のバウムテストでは、上記のような部分的な特徴のみではなく、全体的な印象、筆圧、サイズ、描き始める順番なども踏まえて専門的に評価されます。
+          本アプリは心理検査や診断目的として作成したものではありません。判定結果は参考程度にご覧ください。
+        </p>
+
+      </div>
+    </details>
+
+    {% endif %}
+
+  </div>
+
+  <footer>
+    <img class="footer_img"
+         src="https://aidemyexstorage.blob.core.windows.net/aidemycontents/1621500180546399.png"
+         alt="Aidemy">
+    <small>&copy; 2019 Aidemy, inc.</small>
+  </footer>
+
+  <!-- =========================
+       Howto carousel JS (inline)
+       - 外部ライブラリなし
+       - フェード（最小アニメーション）
+  ========================== -->
+  <script>
+  (() => {
+    const root = document.querySelector('[data-howto-carousel]');
+    if (!root) return;
+
+    const slides = Array.from(root.querySelectorAll('[data-slide]'));
+    const btnPrev = root.querySelector('[data-prev]');
+    const btnNext = root.querySelector('[data-next]');
+    const currentEl = root.querySelector('[data-current]');
+    const totalEl = root.querySelector('[data-total]');
+    const dotsWrap = root.querySelector('[data-dots]');
+    const dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll('[data-dot]')) : [];
+
+    let index = 0;
+    const last = slides.length - 1;
+
+    const update = () => {
+      slides.forEach((s, i) => s.classList.toggle('is-active', i === index));
+
+      if (currentEl) currentEl.textContent = String(index + 1);
+      if (totalEl) totalEl.textContent = String(slides.length);
+
+      if (btnPrev) btnPrev.disabled = (index === 0);
+      if (btnNext) btnNext.disabled = (index === last);
+
+      dots.forEach((d, i) => d.classList.toggle('is-active', i === index));
+    };
+
+    btnPrev?.addEventListener('click', () => {
+      if (index > 0) { index -= 1; update(); }
+    });
+
+    btnNext?.addEventListener('click', () => {
+      if (index < last) { index += 1; update(); }
+    });
+
+    dots.forEach((d, i) => {
+      d.addEventListener('click', () => { index = i; update(); });
+    });
+
+    // キーボード操作（左右キー）
+    root.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft' && index > 0) { index -= 1; update(); }
+      if (e.key === 'ArrowRight' && index < last) { index += 1; update(); }
+    });
+
+    update();
+  })();
+  </script>
+</body>
+</html>
