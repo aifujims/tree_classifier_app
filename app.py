@@ -5,6 +5,7 @@ from flask import Flask, render_template, request, url_for
 from werkzeug.utils import secure_filename
 from tensorflow.keras.models import load_model
 from tensorflow.keras.applications.vgg16 import preprocess_input
+from tensorflow.keras import backend as K
 import cv2
 
 
@@ -26,17 +27,24 @@ ROOT_CLASSES = ["root_no", "root_yes"]
 TRUNK_CLASSES = ["thin", "thick"]
 DEADTREE_CLASSES = ["normal", "deadtree"]
 
-# ---- メモリ節約のための設定 ----
-# True: stump/xmasだけは一度ロードしたら使い回す
-# False: 毎回ロードして毎回捨てる
-CACHE_STUMP_XMAS = True
+# ---- メモリ節約設定 ----
+CACHE_STUMP_XMAS = False
 CACHE_OTHERS = False
 
-_model_cache = {}  # {path: model}
+_model_cache = {}  # {rel_path: model}
 
 
 def _abs_model_path(rel_path: str) -> str:
     return os.path.join(app.root_path, rel_path)
+
+
+def unload_model(model):
+
+    try:
+        del model
+    finally:
+        K.clear_session()
+        gc.collect()
 
 
 def get_model(rel_path: str, *, cache: bool):
@@ -53,13 +61,6 @@ def get_model(rel_path: str, *, cache: bool):
         _model_cache[rel_path] = model
 
     return model
-
-
-def drop_model(rel_path: str):
-    m = _model_cache.pop(rel_path, None)
-    if m is not None:
-        del m
-    gc.collect()
 
 
 def preprocess_image(img_path: str) -> np.ndarray:
@@ -110,9 +111,11 @@ def index():
     try:
         x = preprocess_image(save_path)
 
-        # 1) stump
+        # 1) stump（毎回ロード→推論→破棄）
         stump_model = get_model(STUMP_MODEL_PATH, cache=CACHE_STUMP_XMAS)
         stump_label, _ = predict_label(stump_model, x, STUMP_CLASSES)
+        if not CACHE_STUMP_XMAS:
+            unload_model(stump_model)
 
         if stump_label == "stump":
             return render_template("index.html", result={
@@ -127,9 +130,11 @@ def index():
                 "error": None,
             })
 
-        # 2) xmas
+        # 2) xmas（毎回ロード→推論→破棄）
         xmas_model = get_model(XMAS_MODEL_PATH, cache=CACHE_STUMP_XMAS)
         xmas_label, _ = predict_label(xmas_model, x, XMAS_CLASSES)
+        if not CACHE_STUMP_XMAS:
+            unload_model(xmas_model)
 
         if xmas_label == "xmas":
             return render_template("index.html", result={
@@ -140,25 +145,25 @@ def index():
                 "root_label": None,
                 "trunk_label": None,
                 "leaves_label": None,
-                "uploaded_url": uploaded_url, 
+                "uploaded_url": uploaded_url,
                 "error": None,
             })
 
-        # 3) normal の場合だけ root + trunk + leaves
+        # 3) normal の場合だけ root + trunk + leaves（1個ずつロード→推論→破棄）
         root_model = get_model(ROOT_MODEL_PATH, cache=CACHE_OTHERS)
         root_label, _ = predict_label(root_model, x, ROOT_CLASSES)
         if not CACHE_OTHERS:
-            drop_model(ROOT_MODEL_PATH)
+            unload_model(root_model)
 
         trunk_model = get_model(TRUNK_MODEL_PATH, cache=CACHE_OTHERS)
         trunk_label, _ = predict_label(trunk_model, x, TRUNK_CLASSES)
         if not CACHE_OTHERS:
-            drop_model(TRUNK_MODEL_PATH)
+            unload_model(trunk_model)
 
         deadtree_model = get_model(DEADTREE_MODEL_PATH, cache=CACHE_OTHERS)
         leaves_label, _ = predict_label(deadtree_model, x, DEADTREE_CLASSES)
         if not CACHE_OTHERS:
-            drop_model(DEADTREE_MODEL_PATH)
+            unload_model(deadtree_model)
 
         root_jp = "あり" if root_label == "root_yes" else "なし"
         trunk_jp = "太め" if trunk_label == "thick" else "細め"
@@ -177,7 +182,10 @@ def index():
         })
 
     except Exception as e:
-        return render_template("index.html", result={"error": f"エラーメッセージ: {e}", "uploaded_url": uploaded_url})
+        return render_template("index.html", result={
+            "error": f"エラーメッセージ: {e}",
+            "uploaded_url": uploaded_url
+        })
 
 
 if __name__ == "__main__":
