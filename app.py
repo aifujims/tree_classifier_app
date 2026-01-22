@@ -1,4 +1,5 @@
 import os
+import gc
 import numpy as np
 from flask import Flask, render_template, request, url_for
 from werkzeug.utils import secure_filename
@@ -13,23 +14,52 @@ UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-STUMP_MODEL_PATH = "stump_classifier.keras"   # stump / normal
-XMAS_MODEL_PATH = "xmas_classifier.keras"   # xmas / normal
-ROOT_MODEL_PATH = "root_classifier.keras"    # root_yes / root_no
-TRUNK_MODEL_PATH = "trunk_classifier.keras"  # thick / thin
-DEADTREE_MODEL_PATH = "deadtree_classifier.keras"   # deadtree / normal
-
-stump_model = load_model(STUMP_MODEL_PATH) if os.path.exists(STUMP_MODEL_PATH) else None
-xmas_model = load_model(XMAS_MODEL_PATH) if os.path.exists(XMAS_MODEL_PATH) else None
-root_model = load_model(ROOT_MODEL_PATH) if os.path.exists(ROOT_MODEL_PATH) else None
-trunk_model = load_model(TRUNK_MODEL_PATH) if os.path.exists(TRUNK_MODEL_PATH) else None
-deadtree_model = load_model(DEADTREE_MODEL_PATH) if os.path.exists(DEADTREE_MODEL_PATH) else None
+STUMP_MODEL_PATH = "stump_classifier.keras"
+XMAS_MODEL_PATH = "xmas_classifier.keras"
+ROOT_MODEL_PATH = "root_classifier.keras"
+TRUNK_MODEL_PATH = "trunk_classifier.keras"
+DEADTREE_MODEL_PATH = "deadtree_classifier.keras"
 
 STUMP_CLASSES = ["normal", "stump"]
 XMAS_CLASSES = ["normal", "xmas"]
 ROOT_CLASSES = ["root_no", "root_yes"]
 TRUNK_CLASSES = ["thin", "thick"]
 DEADTREE_CLASSES = ["normal", "deadtree"]
+
+# ---- メモリ節約のための設定 ----
+# True: stump/xmasだけは一度ロードしたら使い回す
+# False: 毎回ロードして毎回捨てる
+CACHE_STUMP_XMAS = True
+CACHE_OTHERS = False
+
+_model_cache = {}  # {path: model}
+
+
+def _abs_model_path(rel_path: str) -> str:
+    return os.path.join(app.root_path, rel_path)
+
+
+def get_model(rel_path: str, *, cache: bool):
+    if cache and rel_path in _model_cache:
+        return _model_cache[rel_path]
+
+    path = _abs_model_path(rel_path)
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Missing model: {rel_path}")
+
+    model = load_model(path)
+
+    if cache:
+        _model_cache[rel_path] = model
+
+    return model
+
+
+def drop_model(rel_path: str):
+    m = _model_cache.pop(rel_path, None)
+    if m is not None:
+        del m
+    gc.collect()
 
 
 def preprocess_image(img_path: str) -> np.ndarray:
@@ -45,30 +75,19 @@ def preprocess_image(img_path: str) -> np.ndarray:
 def predict_label(model, x: np.ndarray, class_names: list[str], threshold: float = 0.5) -> tuple[str, float]:
     y = model.predict(x, verbose=0)
     y = np.array(y)
-    
+
     # sigmoid
     if (y.ndim == 2 and y.shape[1] == 1) or (y.ndim == 1 and y.shape[0] == 1):
         p1 = float(y.reshape(-1)[0])
         idx = 1 if p1 >= threshold else 0
         conf = p1 if idx == 1 else (1.0 - p1)
         return class_names[idx], conf
-    
-    # softmax(※現時点では使用なし)
+
+    # softmax
     probs = y[0]
     idx = int(np.argmax(probs))
     conf = float(probs[idx])
     return class_names[idx], conf
-
-
-def ensure_models():
-    missing = []
-    if stump_model is None: missing.append(STUMP_MODEL_PATH)
-    if xmas_model is None: missing.append(XMAS_MODEL_PATH)
-    if root_model is None: missing.append(ROOT_MODEL_PATH)
-    if trunk_model is None: missing.append(TRUNK_MODEL_PATH)
-    if deadtree_model is None: missing.append(DEADTREE_MODEL_PATH)
-    if missing:
-        raise FileNotFoundError("Missing models: " + ", ".join(missing))
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -82,25 +101,21 @@ def index():
 
     filename = secure_filename(file.filename)
     if not filename.lower().endswith(".png"):
-        return render_template(
-            "index.html",
-            result={"error": "PNG形式の画像をアップロードしてください。"}
-        )
+        return render_template("index.html", result={"error": "PNG形式の画像をアップロードしてください。"})
+
     save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
     file.save(save_path)
-
     uploaded_url = url_for("static", filename=f"uploads/{filename}")
 
     try:
-        ensure_models()
-
         x = preprocess_image(save_path)
 
-        # stump判定
+        # 1) stump
+        stump_model = get_model(STUMP_MODEL_PATH, cache=CACHE_STUMP_XMAS)
         stump_label, _ = predict_label(stump_model, x, STUMP_CLASSES)
 
         if stump_label == "stump":
-            result = {
+            return render_template("index.html", result={
                 "is_stump": True,
                 "is_xmas": None,
                 "stump_label": "切り株",
@@ -110,14 +125,14 @@ def index():
                 "leaves_label": None,
                 "uploaded_url": uploaded_url,
                 "error": None,
-            }
-            return render_template("index.html", result=result)
+            })
 
-        # xmas判定
+        # 2) xmas
+        xmas_model = get_model(XMAS_MODEL_PATH, cache=CACHE_STUMP_XMAS)
         xmas_label, _ = predict_label(xmas_model, x, XMAS_CLASSES)
 
         if xmas_label == "xmas":
-            result = {
+            return render_template("index.html", result={
                 "is_stump": False,
                 "is_xmas": True,
                 "stump_label": None,
@@ -125,21 +140,31 @@ def index():
                 "root_label": None,
                 "trunk_label": None,
                 "leaves_label": None,
-                "uploaded_url": uploaded_url,
+                "uploaded_url": uploaded_url, 
                 "error": None,
-            }
-            return render_template("index.html", result=result)
+            })
 
-        # normal の場合だけ root + trunk + leaves 判定
+        # 3) normal の場合だけ root + trunk + leaves
+        root_model = get_model(ROOT_MODEL_PATH, cache=CACHE_OTHERS)
         root_label, _ = predict_label(root_model, x, ROOT_CLASSES)
+        if not CACHE_OTHERS:
+            drop_model(ROOT_MODEL_PATH)
+
+        trunk_model = get_model(TRUNK_MODEL_PATH, cache=CACHE_OTHERS)
         trunk_label, _ = predict_label(trunk_model, x, TRUNK_CLASSES)
+        if not CACHE_OTHERS:
+            drop_model(TRUNK_MODEL_PATH)
+
+        deadtree_model = get_model(DEADTREE_MODEL_PATH, cache=CACHE_OTHERS)
         leaves_label, _ = predict_label(deadtree_model, x, DEADTREE_CLASSES)
+        if not CACHE_OTHERS:
+            drop_model(DEADTREE_MODEL_PATH)
 
         root_jp = "あり" if root_label == "root_yes" else "なし"
         trunk_jp = "太め" if trunk_label == "thick" else "細め"
         leaves_jp = "なし" if leaves_label == "deadtree" else "あり"
 
-        result = {
+        return render_template("index.html", result={
             "is_stump": False,
             "is_xmas": False,
             "stump_label": None,
@@ -149,14 +174,11 @@ def index():
             "leaves_label": leaves_jp,
             "uploaded_url": uploaded_url,
             "error": None,
-        }
-        return render_template("index.html", result=result)
+        })
 
     except Exception as e:
-        return render_template(
-            "index.html",
-            result={"error": f"エラーメッセージ: {e}", "uploaded_url": uploaded_url}
-        )
+        return render_template("index.html", result={"error": f"エラーメッセージ: {e}", "uploaded_url": uploaded_url})
+
 
 if __name__ == "__main__":
     app.run(debug=True)
