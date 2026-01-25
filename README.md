@@ -52,6 +52,7 @@ PNG形式の画像をアップロードすると、判定結果が表示され�
 ---
 
 ## ディレクトリ構成
+```text
 tree_classifier_app/
 ├── app.py
 ├── test.py
@@ -69,4 +70,5 @@ app.py：Flaskアプリ本体
 test.py：精度検証用スクリプト
 test_images/：検証用画像
 static/uploads/：アップロード画像の一時保存
+
 *.keras：学習済みモデル
