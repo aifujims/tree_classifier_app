@@ -72,7 +72,3 @@ tree_classifier_app/
 │   └── uploads/        # ユーザーがアップロードした画像（一時保存）
 ├── *.keras             # 画像判定用モデル
 └── README.md
-
-test.pyでは、test_images配下に保存したすべての画像について、5つのモデルの判定結果およびconfを出力します。
-
-
