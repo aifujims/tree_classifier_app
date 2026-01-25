@@ -49,6 +49,13 @@ http://127.0.0.1:5000
 ### 4. 画像をアップロード
 PNG形式の画像をアップロードすると、判定結果が表示されます。
 
+### 5. test.py / test_images について
+test.py は、test_images/ 配下に保存されたすべての画像を対象に、
+5つのモデルそれぞれの判定結果および confidence（確信度）を出力する検証用スクリプトです。
+
+test_images/ には、動作確認用のサンプル画像を配置しています。
+これらの画像は、Flaskアプリの動作確認にも利用できます。
+
 ---
 
 ## ディレクトリ構成
@@ -56,7 +63,7 @@ PNG形式の画像をアップロードすると、判定結果が表示され�
 tree_classifier_app/
 ├── app.py              # Flaskアプリ本体
 ├── test.py             # 精度検証用スクリプト
-├── test_images/        # 検証用画像
+├── test_images/        # 検証用画像サンプル
 ├── templates/
 │   └── index.html
 ├── static/
@@ -65,4 +72,7 @@ tree_classifier_app/
 │   └── uploads/        # ユーザーがアップロードした画像（一時保存）
 ├── *.keras             # 画像判定用モデル
 └── README.md
+
+test.pyでは、test_images配下に保存したすべての画像について、5つのモデルの判定結果およびconfを出力します。
+
 
