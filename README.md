@@ -52,6 +52,8 @@ PNG形式の画像をアップロードすると、判定結果が表示され�
 ---
 
 ## ディレクトリ構成
+```text
+```text
 tree_classifier_app/
 ├── app.py              # Flaskアプリ本体
 ├── test.py             # 精度検証用スクリプト
@@ -59,7 +61,7 @@ tree_classifier_app/
 ├── templates/
 │   └── index.html
 ├── static/
-│   ├── stylesheet.css
+│   ├── stylesheet.css  # スタイルシート
 │   ├── img/            # UI表示用画像
 │   └── uploads/        # ユーザーがアップロードした画像（一時保存）
 ├── *.keras             # 画像判定用モデル
