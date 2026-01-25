@@ -2,23 +2,21 @@ import os
 import sys
 import argparse
 from pathlib import Path
-
 import numpy as np
 import cv2
 from tensorflow.keras.models import load_model
 from tensorflow.keras.applications.vgg16 import preprocess_input
 
 
-# -------------------------
-# Model paths (project root)
-# -------------------------
+# Model paths
 STUMP_MODEL_PATH = "stump_classifier.keras"          # normal / stump
 XMAS_MODEL_PATH = "xmas_classifier.keras"            # normal / xmas
 ROOT_MODEL_PATH = "root_classifier.keras"            # root_no / root_yes
 TRUNK_MODEL_PATH = "trunk_classifier.keras"          # thin / thick
 DEADTREE_MODEL_PATH = "deadtree_classifier.keras"    # normal / deadtree
 
-# class order (IMPORTANT: must match training)
+
+# class order
 CLASS_NAMES = {
     "stump": ["normal", "stump"],
     "xmas": ["normal", "xmas"],
@@ -27,19 +25,18 @@ CLASS_NAMES = {
     "deadtree": ["normal", "deadtree"],
 }
 
+
 # which label is treated as YES
 POSITIVE_LABEL = {
     "stump": "stump",
     "xmas": "xmas",
     "root": "root_yes",
-    "trunk": "thick",       # YES=thick（太い） ※変えたいならここを "thin" に
+    "trunk": "thick",
     "deadtree": "deadtree",
 }
 
 
-# -------------------------
 # Utils
-# -------------------------
 def preprocess_image(img_path: str) -> np.ndarray:
     img = cv2.imread(img_path)
     if img is None:
@@ -120,9 +117,7 @@ def predict_yesno_and_conf(model, x: np.ndarray, key: str, threshold: float) -> 
     return "NO", 1.0 - p_yes
 
 
-# -------------------------
 # Main
-# -------------------------
 def main():
     parser = argparse.ArgumentParser(
         description="TreeClassifier test runner (print YES/NO + confidence for each model)."
@@ -187,3 +182,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
